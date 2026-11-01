@@ -2,22 +2,28 @@
 
 安卓端 NAS 音频播放器。直连家用 NAS 的 SMB 共享，把里面的儿童故事/读物按文件夹列出来播放，不转存、不上传。
 
-- 安装包：`dist/大哥的播放器-v1.9.4.apk`（构建产物在 `app/build/outputs/apk/release/`，发布版统一复制到 `dist/`）
 - 包名：`com.dage.player`　版本：1.9.4　支持 Android 8.0+（minSdk 26，targetSdk 34）
 
-## 目录约定
+## 界面
 
-所有产出都留在工程目录内，不放桌面：
+| 首页 | 播放页 | 主题封面 |
+| --- | --- | --- |
+| ![首页](screenshots/01-首页-浅色.png) | ![播放页](screenshots/03-播放页-浅色.png) | ![封面](screenshots/11-主题封面-方块.png) |
+
+更多截图（深色模式、AI 封面、批量生成等）见 [`screenshots/`](screenshots/)。
+
+## 目录结构
+
+仓库里只有源码、资源和截图。下面这些是本地开发用的目录，**不随仓库分发**（已在 `.gitignore` 中排除）：
 
 | 目录 | 内容 |
 | --- | --- |
-| `dist/` | 各版本安装包（`大哥的播放器-v1.x.apk`） |
-| `backup/` | 源码 zip 备份（`大哥的播放器-v1.x-源码备份-YYYYMMDD.zip`） |
 | `app/src/` | 源码与资源（封面在 `res/drawable-nodpi/`） |
-| `covers_src/` | 封面原始 1024 PNG，改尺寸/重出图时用 |
-| `samples/` | 最初试风格用的 3 张样板图 |
 | `screenshots/` | 各版本界面截图 |
-| `.workbuddy/memory/` | 项目开发日志与备忘 |
+| `dist/` | 各版本安装包（仅本地保留） |
+| `backup/` | 源码 zip 备份（仅本地保留） |
+| `covers_src/` | 封面原始 1024 PNG（仅本地保留） |
+| `samples/` | 最初试风格用的样板图（仅本地保留） |
 
 ## 功能
 
