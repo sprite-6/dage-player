@@ -3,27 +3,20 @@
 安卓端 NAS 音频播放器。直连家用 NAS 的 SMB 共享，把里面的儿童故事/读物按文件夹列出来播放，不转存、不上传。
 
 - 包名：`com.dage.player`　版本：1.9.4　支持 Android 8.0+（minSdk 26，targetSdk 34）
-
-## 界面
-
-| 首页 | 播放页 | 主题封面 |
-| --- | --- | --- |
-| ![首页](screenshots/01-首页-浅色.png) | ![播放页](screenshots/03-播放页-浅色.png) | ![封面](screenshots/11-主题封面-方块.png) |
-
-更多截图（深色模式、AI 封面、批量生成等）见 [`screenshots/`](screenshots/)。
+- 安装包：见 [Releases](../../releases) 页下载最新 APK
 
 ## 目录结构
 
-仓库里只有源码、资源和截图。下面这些是本地开发用的目录，**不随仓库分发**（已在 `.gitignore` 中排除）：
+仓库里只有源码和资源。下面这些是本地开发用的目录，**不随仓库分发**（已在 `.gitignore` 中排除）：
 
 | 目录 | 内容 |
 | --- | --- |
 | `app/src/` | 源码与资源（封面在 `res/drawable-nodpi/`） |
-| `screenshots/` | 各版本界面截图 |
 | `dist/` | 各版本安装包（仅本地保留） |
 | `backup/` | 源码 zip 备份（仅本地保留） |
 | `covers_src/` | 封面原始 1024 PNG（仅本地保留） |
 | `samples/` | 最初试风格用的样板图（仅本地保留） |
+| `screenshots/` | 界面截图（仅本地保留） |
 
 ## 功能
 

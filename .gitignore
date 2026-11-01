@@ -17,6 +17,9 @@ backup/
 covers_src/
 samples/
 
+# 本地截图（不上传）
+screenshots/
+
 # 私人物料：不公开
 .workbuddy/
 报告/
