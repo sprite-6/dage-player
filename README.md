@@ -75,9 +75,9 @@
 
 | 字段 | 默认值 / 说明 |
 | --- | --- |
-| Base URL | `https://api.agnes-ai.cn/v1`（国内节点；国际站是 `https://apihub.agnes-ai.com/v1`；任何 OpenAI 兼容的 `/images/generations` 都行） |
-| 图像模型 ID | `agnes-image-2.5-flash`（**必须带 `image`**；`agnes-2.5-flash` 是对话模型，会报 400）。自己做界面不提供预设，四个字段手填即可 |
-| API Key | 自己申请，只存本机（Android Keystore AES‑GCM 加密），可随时清空 |
+| Base URL | 任何 OpenAI 兼容的 `/images/generations` 都行） |
+| 图像模型 ID |
+| API Key | 只存本机（Android Keystore AES‑GCM 加密），可随时清空 |
 | 尺寸档 / 比例 | `1K` + `1:1`；换成别家可以填像素值，程序会自己换算 |
 
 **接口形态自动识别（v1.6）**：各家写法只在三处不同——尺寸是像素还是 `1K` 档位、比例放哪个字段、`response_format` 放顶层还是 `extra_body`。所以设置页有「测试接口」按钮，点一次会依次试三种形态：
