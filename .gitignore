@@ -1,0 +1,29 @@
+# 构建产物
+app/build/
+build/
+.gradle/
+local.properties
+
+# 签名密钥库：绝不进版本库
+*.jks
+*.keystore
+*.p12
+
+# 发布包与源码备份（体积大，不进版本库）
+dist/
+backup/
+
+# 封面原始 PNG（29MB，需要时从设计源再取）
+covers_src/
+samples/
+
+# 私人物料：不公开
+.workbuddy/
+报告/
+宣传/
+开发笔记.rtf
+
+# 系统/编辑器
+.DS_Store
+.idea/
+*.iml
