@@ -24,10 +24,7 @@ object CustomCovers {
     }
 
     fun fileFor(context: Context, folderUrl: String): File =
-        File(dir(context), md5(norm(folderUrl)) + ".jpg")
-
-    /** 目录 URL 可能带也可能不带结尾斜杠，统一成带斜杠再算 key */
-    private fun norm(url: String): String = url.trimEnd('/') + "/"
+        CoverKey.fileFor(dir(context), folderUrl) { md5(it) }
 
     fun has(context: Context, folderUrl: String): Boolean {
         if (folderUrl.isBlank()) return false

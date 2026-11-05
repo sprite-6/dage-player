@@ -47,8 +47,13 @@ fun rememberAiCover(folderUrl: String): ImageBitmap? {
 
 /** 实际展示的封面：手动 > AI（内置主题图由调用方判断） */
 @Composable
-fun rememberFolderCover(folderUrl: String): ImageBitmap? =
-    rememberCustomCover(folderUrl) ?: rememberAiCover(folderUrl)
+fun rememberFolderCover(folderUrl: String): ImageBitmap? {
+    // 两个都查：不能用 ?: 短路，否则有手动封面时不会走到 AI 那一路，
+    // 藏在下面的 AI 封面就永远没机会做 key 迁移
+    val custom = rememberCustomCover(folderUrl)
+    val ai = rememberAiCover(folderUrl)
+    return custom ?: ai
+}
 
 // ---------------- 逐层向上找封面 ----------------
 

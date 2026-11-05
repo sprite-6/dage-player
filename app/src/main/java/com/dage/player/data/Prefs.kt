@@ -23,6 +23,21 @@ object Prefs {
         sp = context.applicationContext.getSharedPreferences("dage_prefs", Context.MODE_PRIVATE)
         themeFlow.value = themeMode
         migrateAiBaseUrl()
+        migrateCoverKey()
+    }
+
+    /**
+     * 封面 key 从「完整 URL 的 md5」改成「相对路径的 md5」。
+     * 趁用户还没换协议，先把当前地址记下来，之后访问到哪个文件夹就把哪个的封面文件改名。
+     */
+    private fun migrateCoverKey() {
+        if (sp.getBoolean("cover_key_v2", false)) return
+        val base = nas()?.baseUrl
+        if (base.isNullOrBlank()) return // 还没配置，等配置好再说
+        sp.edit()
+            .putString("cover_legacy_base", base)
+            .putBoolean("cover_key_v2", true)
+            .apply()
     }
 
     /** v1.9 起默认用国内节点；老版本存过的国际站地址自动换过来 */
@@ -118,6 +133,14 @@ object Prefs {
         pass = pass,
         domain = domain,
     )
+
+    /** 当前媒体根地址，封面 key 靠它算相对路径；换协议/换地址时它变、相对路径不变 */
+    val mediaBase: String
+        get() = nas()?.baseUrl.orEmpty()
+
+    /** 升级到「相对路径 key」之前用的旧地址，用于把老封面文件改名，不做就要重新生成 */
+    val coverLegacyBase: String
+        get() = sp.getString("cover_legacy_base", "").orEmpty()
 
     fun saveNas(host: String, share: String, root: String, user: String, pass: String, domain: String) {
         sp.edit()

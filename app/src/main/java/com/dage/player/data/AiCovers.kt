@@ -43,9 +43,8 @@ object AiCovers {
         return d
     }
 
-    fun fileFor(context: Context, folderUrl: String): File = File(dir(context), md5(norm(folderUrl)) + ".jpg")
-
-    private fun norm(url: String): String = url.trimEnd('/') + "/"
+    fun fileFor(context: Context, folderUrl: String): File =
+        CoverKey.fileFor(dir(context), folderUrl) { md5(it) }
 
     fun has(context: Context, folderUrl: String): Boolean {
         if (folderUrl.isBlank()) return false
