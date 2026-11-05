@@ -348,7 +348,7 @@ fun SettingsScreen(onBack: () -> Unit, openAi: () -> Unit, openAbout: () -> Unit
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(14.dp))
             Text(
-                "大哥的播放器 v1.9.5",
+                "大哥的播放器 v1.9.6",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )

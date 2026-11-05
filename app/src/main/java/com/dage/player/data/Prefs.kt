@@ -17,6 +17,10 @@ object Prefs {
     /** 0 跟随系统 / 1 浅色 / 2 深色 */
     val themeFlow = MutableStateFlow(0)
 
+    /** NAS 密码解密后的内存缓存，null 表示还没读过 */
+    @Volatile
+    private var passCache: String? = null
+
     @Synchronized
     fun init(context: Context) {
         if (::sp.isInitialized) return
@@ -76,10 +80,40 @@ object Prefs {
             sp.edit().putString("user", v.trim()).apply(); bump()
         }
 
+    /**
+     * NAS 密码。用 Android Keystore 加密后存 `pass_enc`，旧版本的明文 `pass` 读一次就迁移并删掉。
+     * 解密结果缓存在内存里，避免每次拼 NAS 配置都做一次 Keystore 运算。
+     */
     var pass: String
-        get() = sp.getString("pass", "").orEmpty()
+        get() {
+            passCache?.let { return it }
+            val enc = sp.getString("pass_enc", "").orEmpty()
+            if (enc.isNotEmpty()) {
+                val plain = SecureStore.decrypt(enc, SecureStore.ALIAS_NAS_PASS).orEmpty()
+                passCache = plain
+                return plain
+            }
+            // 老数据：明文还在，迁移一次
+            val legacy = sp.getString("pass", "").orEmpty()
+            if (legacy.isEmpty()) {
+                passCache = ""
+                return ""
+            }
+            val migrated = SecureStore.encrypt(legacy, SecureStore.ALIAS_NAS_PASS)
+            if (!migrated.isNullOrEmpty()) {
+                sp.edit().putString("pass_enc", migrated).remove("pass").apply()
+            }
+            passCache = legacy
+            return legacy
+        }
         set(v) {
-            sp.edit().putString("pass", v).apply(); bump()
+            passCache = v
+            val enc = if (v.isEmpty()) "" else SecureStore.encrypt(v, SecureStore.ALIAS_NAS_PASS)
+            val editor = sp.edit()
+            // 加密失败（极少数机型 Keystore 不可用）就退回明文，宁可降级也不能把密码弄丢
+            if (enc.isNullOrEmpty()) editor.putString("pass", v) else editor.putString("pass_enc", enc).remove("pass")
+            editor.apply()
+            bump()
         }
 
     var domain: String
@@ -148,9 +182,10 @@ object Prefs {
             .putString("share", share.trim())
             .putString("root", root.trim())
             .putString("user", user.trim())
-            .putString("pass", pass)
             .putString("domain", domain.trim())
             .apply()
+        // 密码走加密存储，别在这里落明文
+        this.pass = pass
         bump()
     }
 

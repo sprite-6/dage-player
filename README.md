@@ -109,7 +109,7 @@
 
 **错误提示（v1.8）**：识别出模型名填成了对话模型时，直接告诉你该改成哪个名字，并且不再换着形态重试（原本会白试 3 次）；Base URL 是 Agnes 域名但模型名不含 `image` 时，输入框下方会提前给出警告。
 
-**安全边界**：Key 用 Keystore 加密后存 prefs，`allowBackup=false` 且 `dataExtractionRules` 禁止云备份/换机迁移带走；APK 里不含任何 Key；只发送文件夹名和文件名，不发送音频。设备被 root 仍可能读到，条款里已写明。
+**安全边界**：API Key 和 NAS 密码都用 Android Keystore（AES‑GCM）加密后存 prefs，明文不落盘；密钥不出安全硬件，`allowBackup=false`，`allowBackup=false` 且 `dataExtractionRules` 禁止云备份/换机迁移带走；APK 里不含任何 Key；只发送文件夹名和文件名，不发送音频。设备被 root 仍可能读到，条款里已写明。
 
 > 注意：本项目只在**本地假接口**上跑通过完整链路（请求构造、三形态协商、增量判定、解析、裁剪、缓存、刷新），尚未用真实 Agnes Key 验证最终出图质量与限流阈值，首次使用请先点「测试接口」再单个生成一张。
 

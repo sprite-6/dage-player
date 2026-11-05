@@ -31,8 +31,8 @@ android {
         applicationId = "com.dage.player"
         minSdk = 26
         targetSdk = 34
-        versionCode = 15
-        versionName = "1.9.5"
+        versionCode = 16
+        versionName = "1.9.6"
         vectorDrawables.useSupportLibrary = true
     }
 

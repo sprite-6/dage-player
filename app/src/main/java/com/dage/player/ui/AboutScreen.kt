@@ -64,7 +64,7 @@ fun AboutScreen(onBack: () -> Unit) {
         ) {
             Spacer(Modifier.height(6.dp))
             Text(
-                "大哥的播放器 v1.9.5",
+                "大哥的播放器 v1.9.6",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
