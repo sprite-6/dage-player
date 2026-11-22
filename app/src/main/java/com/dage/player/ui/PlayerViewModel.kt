@@ -30,6 +30,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** 选集列表里的一项 */
+data class Episode(val title: String, val url: String)
+
 data class PlayerState(
     val connected: Boolean = false,
     val title: String? = null,
@@ -41,6 +44,9 @@ data class PlayerState(
     val duration: Long = 0L,
     val hasNext: Boolean = false,
     val hasPrev: Boolean = false,
+    /** 当前文件夹的播放队列，用来做选集 */
+    val episodes: List<Episode> = emptyList(),
+    val currentIndex: Int = 0,
 )
 
 class PlayerViewModel(app: Application) : AndroidViewModel(app) {
@@ -101,8 +107,21 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private fun sync() {
         val c = controller ?: return
         val item = c.currentMediaItem
-        _state.update {
-            it.copy(
+        _state.update { prev ->
+            // 队列变了才重建列表，切集只更新下标。
+            // 光比集数不够：两个文件夹集数相同（比如都是 12 集）时标题会串，所以要带上首集 url 一起比
+            val sameQueue = c.mediaItemCount == prev.episodes.size &&
+                (c.mediaItemCount == 0 || prev.episodes.firstOrNull()?.url == c.getMediaItemAt(0).mediaId)
+            val episodes = if (!sameQueue) {
+                (0 until c.mediaItemCount).map { i ->
+                    val mi = c.getMediaItemAt(i)
+                    Episode(
+                        title = mi.mediaMetadata.title?.toString() ?: "第 ${i + 1} 集",
+                        url = mi.mediaId,
+                    )
+                }
+            } else prev.episodes
+            prev.copy(
                 title = item?.mediaMetadata?.title?.toString(),
                 subtitle = item?.mediaMetadata?.artist?.toString(),
                 uri = item?.mediaId,
@@ -112,6 +131,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 duration = if (c.duration > 0) c.duration else ProgressStore.duration(item?.mediaId.orEmpty()),
                 hasNext = c.mediaItemCount > c.currentMediaItemIndex + 1,
                 hasPrev = c.currentMediaItemIndex > 0,
+                episodes = episodes,
+                currentIndex = c.currentMediaItemIndex.coerceAtLeast(0),
             )
         }
     }
@@ -179,6 +200,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun next() {
         controller?.seekToNextMediaItem()
+    }
+
+    /** 选集：切到第 index 集，从头开始播 */
+    fun playAt(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        c.seekTo(index, 0)
+        c.play()
     }
 
     fun previous() {
