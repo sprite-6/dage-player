@@ -249,6 +249,29 @@ fun SettingsScreen(onBack: () -> Unit, openAi: () -> Unit, openAbout: () -> Unit
                 selected = mode,
                 onSelect = { Prefs.themeMode = it },
             )
+            var landscapeOn by remember { mutableStateOf(Prefs.allowLandscape) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("允许横屏", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "关掉后整个 App 锁竖屏；横屏时播放页会变成左右分栏",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = landscapeOn,
+                    onCheckedChange = {
+                        landscapeOn = it
+                        Prefs.allowLandscape = it
+                    },
+                )
+            }
 
             SectionTitle("文件夹显示")
             PillSelector(
@@ -348,7 +371,7 @@ fun SettingsScreen(onBack: () -> Unit, openAi: () -> Unit, openAbout: () -> Unit
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(14.dp))
             Text(
-                "大哥的播放器 v1.9.7",
+                "大哥的播放器 v2.0.0",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )

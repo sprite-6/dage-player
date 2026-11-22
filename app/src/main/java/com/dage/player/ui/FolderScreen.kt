@@ -1,5 +1,7 @@
 package com.dage.player.ui
 
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxHeight
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -133,6 +135,7 @@ fun FolderScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         ScreenHeader(title = title, onBack = onBack) {
             if (pinnable) {
@@ -220,7 +223,9 @@ fun FolderScreen(
             }
 
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 860.dp),
                 contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 24.dp),
             ) {
                 items(entries, key = { it.url }) { entry ->

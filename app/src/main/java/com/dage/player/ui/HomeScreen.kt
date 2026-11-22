@@ -1,5 +1,6 @@
 package com.dage.player.ui
 
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -278,9 +279,10 @@ private fun SearchResultGrid(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 20.dp, top = 4.dp, bottom = 6.dp),
         )
+        val side = if (wideScreen()) 84.dp else 16.dp
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 24.dp),
+            columns = GridCells.Adaptive(minSize = 190.dp),
+            contentPadding = PaddingValues(start = side, end = side, top = 0.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
@@ -307,9 +309,10 @@ private fun FolderGrid(
     onOpenContinue: () -> Unit,
     hasContinue: Boolean,
 ) {
+    val side = if (wideScreen()) 84.dp else 16.dp
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+        columns = GridCells.Adaptive(minSize = 190.dp),
+        contentPadding = PaddingValues(start = side, end = side, top = 4.dp, bottom = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize(),
@@ -735,3 +738,7 @@ private fun ErrorBox(message: String, onRetry: () -> Unit) {
         TextButton(onClick = onRetry) { Text("重试") }
     }
 }
+
+/** 横屏或平板：宽度 >= 600dp 时给左右留白，行不会被拉得过长 */
+@Composable
+private fun wideScreen(): Boolean = LocalConfiguration.current.screenWidthDp >= 600

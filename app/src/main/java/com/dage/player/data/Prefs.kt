@@ -129,6 +129,13 @@ object Prefs {
             themeFlow.value = v
         }
 
+    /** 是否允许横屏。关掉后整个 App 锁竖屏（家长给孩子用时常关） */
+    var allowLandscape: Boolean
+        get() = sp.getBoolean("allow_landscape", true)
+        set(v) {
+            sp.edit().putBoolean("allow_landscape", v).apply(); bump()
+        }
+
     /** 文件夹展示方式：0 大方块（两列） / 1 紧凑横条 */
     var folderView: Int
         get() = sp.getInt("folder_view", 0)

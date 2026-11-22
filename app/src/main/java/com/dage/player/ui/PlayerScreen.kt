@@ -1,5 +1,8 @@
 package com.dage.player.ui
 
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -25,6 +29,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.FormatListBulleted
@@ -94,13 +99,15 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
         value = 0
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = 22.dp),
-    ) {
+    // 横屏走左右分栏，竖屏保持原来的单列
+    val cfg = LocalConfiguration.current
+    val landscape = cfg.screenWidthDp > cfg.screenHeightDp
+
+    val folderUrl = ps.uri?.let { if (it.contains('/')) it.substringBeforeLast('/') + "/" else "" }.orEmpty()
+    // 封面可能生成在父目录（音频在子文件夹里），这里会逐层向上找
+    val art = rememberPlaybackCover(folderUrl, ps.title)
+
+    val header: @Composable () -> Unit = {
         ScreenHeader(title = "正在播放", onBack = onBack) {
             IconButton(onClick = { showSleep = true }) {
                 Icon(
@@ -111,21 +118,13 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
                 )
             }
         }
+    }
 
-        Spacer(Modifier.weight(1f))
-
-        val folderUrl = ps.uri?.let { if (it.contains('/')) it.substringBeforeLast('/') + "/" else "" }.orEmpty()
-        // 封面可能生成在父目录（音频在子文件夹里），这里会逐层向上找
-        val art = rememberPlaybackCover(folderUrl, ps.title)
-
+    val artBox: @Composable (Modifier) -> Unit = { m ->
         Box(
-            modifier = Modifier
-                .fillMaxWidth(0.78f)
-                .widthIn(max = 320.dp)
-                .aspectRatio(1f)
+            modifier = m
                 .clip(RoundedCornerShape(28.dp))
-                .background(folderGradient(ps.subtitle ?: ps.title ?: "故事"))
-                .align(Alignment.CenterHorizontally),
+                .background(folderGradient(ps.subtitle ?: ps.title ?: "故事")),
             contentAlignment = Alignment.Center,
         ) {
             when (art) {
@@ -163,17 +162,17 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
                 )
             }
         }
+    }
 
-        Spacer(Modifier.height(34.dp))
-
+    val info: @Composable ColumnScope.(Boolean) -> Unit = { compact ->
         Text(
             text = ps.title ?: "还没有在播放",
-            style = MaterialTheme.typography.headlineSmall,
+            style = if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(if (compact) 4.dp else 6.dp))
         Text(
             text = ps.subtitle.orEmpty(),
             style = MaterialTheme.typography.bodyMedium,
@@ -182,7 +181,7 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
         )
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(if (compact) 12.dp else 18.dp))
 
         Slider(
             value = sliderValue,
@@ -212,7 +211,7 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             )
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(if (compact) 8.dp else 10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -238,13 +237,13 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(if (compact) 64.dp else 72.dp),
             ) {
                 IconButton(onClick = { vm.toggle() }, modifier = Modifier.fillMaxSize()) {
                     Icon(
                         if (ps.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         contentDescription = if (ps.isPlaying) "暂停" else "播放",
-                        modifier = Modifier.size(38.dp),
+                        modifier = Modifier.size(if (compact) 34.dp else 38.dp),
                         tint = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
@@ -268,7 +267,7 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(if (compact) 14.dp else 22.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -331,18 +330,78 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
                 }
             }
         }
+    }
 
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            text = "自动连播本文件夹的下一集",
+    if (landscape) {
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 18.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            textAlign = TextAlign.Center,
-        )
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center,
+            ) {
+                artBox(
+                    Modifier
+                        .fillMaxHeight(0.9f)
+                        .aspectRatio(1f)
+                        .widthIn(max = 420.dp)
+                )
+            }
+            Spacer(Modifier.width(28.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                header()
+                info(true)
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 22.dp),
+        ) {
+            header()
+
+            Spacer(Modifier.weight(1f))
+
+            artBox(
+                Modifier
+                    .fillMaxWidth(0.78f)
+                    .widthIn(max = 320.dp)
+                    .aspectRatio(1f)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(Modifier.height(34.dp))
+
+            info(false)
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                text = "自动连播本文件夹的下一集",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 18.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 
     if (showEpisodes && ps.episodes.isNotEmpty()) {

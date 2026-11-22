@@ -1,6 +1,9 @@
 package com.dage.player.ui
 
+import com.dage.player.data.Prefs
+import androidx.compose.runtime.remember
 import android.Manifest
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -65,6 +68,18 @@ fun AppRoot() {
     val showMini = !ps.title.isNullOrBlank() && route != "player"
 
     val context = LocalContext.current
+
+    // 允许横屏开关：关掉就把 Activity 锁成竖屏，开了交回系统
+    val rev by Prefs.revision.collectAsState()
+    val allowLandscape = remember(rev) { Prefs.allowLandscape }
+    LaunchedEffect(allowLandscape) {
+        context.findActivity()?.requestedOrientation = if (allowLandscape) {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -220,4 +235,14 @@ private fun MiniPlayer(ps: PlayerState, vm: PlayerViewModel, onClick: () -> Unit
             }
         }
     }
+}
+
+/** 从 Compose 的 Context 往上找 Activity，用于设置屏幕方向 */
+private fun android.content.Context.findActivity(): android.app.Activity? {
+    var c: android.content.Context = this
+    while (c is android.content.ContextWrapper) {
+        if (c is android.app.Activity) return c
+        c = c.baseContext
+    }
+    return null
 }
