@@ -1,5 +1,6 @@
 package com.dage.player.ui
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -164,6 +165,71 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
         }
     }
 
+    // 睡眠 + 选集两个胶囊：横屏时固定在右栏底部，避免内容一高就被推到滚动区外
+    val chips: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    .clickable { showSleep = true }
+                    .padding(horizontal = 16.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Rounded.Bedtime,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.size(7.dp))
+                Text(
+                    text = when {
+                        deadline != null -> "剩 ${formatLeft(remaining)} 停止"
+                        pauseAtEnd -> "播完本集停止"
+                        else -> "睡眠定时"
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // 选集入口：只在有播放队列时出现
+            if (ps.episodes.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showEpisodes = true }
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Rounded.FormatListBulleted,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.size(7.dp))
+                    Text(
+                        text = "选集 ${ps.currentIndex + 1}/${ps.episodes.size}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+
     val info: @Composable ColumnScope.(Boolean) -> Unit = { compact ->
         Text(
             text = ps.title ?: "还没有在播放",
@@ -266,70 +332,6 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
                 )
             }
         }
-
-        Spacer(Modifier.height(if (compact) 14.dp else 22.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    .clickable { showSleep = true }
-                    .padding(horizontal = 16.dp, vertical = 9.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Rounded.Bedtime,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.size(7.dp))
-                Text(
-                    text = when {
-                        deadline != null -> "剩 ${formatLeft(remaining)} 停止"
-                        pauseAtEnd -> "播完本集停止"
-                        else -> "睡眠定时"
-                    },
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (deadline != null || pauseAtEnd) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            // 选集入口：只在有播放队列时出现
-            if (ps.episodes.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { showEpisodes = true }
-                        .padding(horizontal = 16.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Rounded.FormatListBulleted,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.size(7.dp))
-                    Text(
-                        text = "选集 ${ps.currentIndex + 1}/${ps.episodes.size}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
     }
 
     if (landscape) {
@@ -358,12 +360,28 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.Center,
+                    .fillMaxHeight(),
             ) {
-                header()
-                info(true)
+                // 标题/进度/控制放滚动区：内容矮时居中，高时可滚（min = 容器高，避免初始滚到中间）
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .heightIn(min = maxHeight),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        header()
+                        info(true)
+                    }
+                }
+                // 两个按钮常驻底部，不管上面内容多长都能看见
+                Spacer(Modifier.height(6.dp))
+                chips()
             }
         }
     } else {
@@ -389,6 +407,10 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             Spacer(Modifier.height(34.dp))
 
             info(false)
+
+            Spacer(Modifier.height(22.dp))
+
+            chips()
 
             Spacer(Modifier.weight(1f))
 
@@ -422,35 +444,27 @@ fun PlayerScreen(vm: PlayerViewModel, onBack: () -> Unit) {
             onDismissRequest = { showSleep = false },
             title = { Text("睡眠定时", fontWeight = FontWeight.SemiBold) },
             text = {
-                Column {
-                    minutes.forEach { m ->
-                        Text(
-                            text = "$m 分钟后停止",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    vm.setSleep(m, false)
-                                    showSleep = false
+                // 横屏时排两列：六个选项一屏放得下，不用滚动；竖屏保持单列
+                val cfgSleep = LocalConfiguration.current
+                val twoCol = cfgSleep.screenWidthDp > cfgSleep.screenHeightDp
+                val items: List<Pair<String, () -> Unit>> =
+                    minutes.map { m -> "$m 分钟后停止" to { vm.setSleep(m, false); showSleep = false } } +
+                        ("播完当前这集停止" to { vm.setSleep(null, true); showSleep = false })
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    if (twoCol) {
+                        items.chunked(2).forEach { pair ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                pair.forEach { (label, action) ->
+                                    SleepOption(label, action, Modifier.weight(1f))
                                 }
-                                .padding(vertical = 13.dp, horizontal = 8.dp),
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                    Text(
-                        text = "播完当前这集停止",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                vm.setSleep(null, true)
-                                showSleep = false
+                                if (pair.size == 1) Spacer(Modifier.weight(1f))
                             }
-                            .padding(vertical = 13.dp, horizontal = 8.dp),
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                        }
+                    } else {
+                        items.forEach { (label, action) ->
+                            SleepOption(label, action, Modifier.fillMaxWidth())
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -561,4 +575,17 @@ private fun EpisodeSheet(
             }
         }
     }
+}
+
+@Composable
+private fun SleepOption(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Text(
+        text = label,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 13.dp, horizontal = 8.dp),
+        fontSize = 15.sp,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
 }
